@@ -147,11 +147,9 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
 
   } catch (err) {
     console.error('Extraction error:', err);
-
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' });
     }
-
     res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });
