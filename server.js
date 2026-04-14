@@ -2,20 +2,20 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// Store uploads in memory (base64) — no disk writes needed
 const storage = multer.memoryStorage();
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
     if (allowed.includes(file.mimetype)) cb(null, true);
@@ -83,9 +83,6 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
     const fileBuffer = req.file.buffer;
     const mimeType = req.file.mimetype;
 
-    let rawContent;
-
-    // Call Gemini REST API directly — no SDK, no version issues
     const base64Data = fileBuffer.toString('base64');
     const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
@@ -106,9 +103,8 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
       throw new Error('Gemini API error: ' + JSON.stringify(geminiJson.error || geminiJson));
     }
 
-    rawContent = geminiJson.candidates[0].content.parts[0].text.trim();
+    const rawContent = geminiJson.candidates[0].content.parts[0].text.trim();
 
-    // Strip markdown code fences if present
     let jsonStr = rawContent;
     if (jsonStr.startsWith('```')) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
@@ -125,7 +121,6 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
       });
     }
 
-    // Derive jobNo from poBox — keep exactly as extracted, don't add prefixes
     const rawPO = (extracted.poBox || '').toString().trim();
     let jobNo = null;
     let jobStatus = 'missing';
@@ -135,7 +130,6 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
       jobStatus = 'found';
     }
 
-    // Build preview — PDFs don't have a visual preview
     const imageDataUrl = mimeType !== 'application/pdf'
       ? `data:${mimeType};base64,${fileBuffer.toString('base64')}`
       : null;
@@ -153,11 +147,9 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
 
   } catch (err) {
     console.error('Extraction error:', err);
-
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' });
     }
-
     res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });
@@ -167,9 +159,9 @@ app.get('/api/health', (req, res) => {
   const key = process.env.GEMINI_API_KEY;
   res.json({
     status: 'ok',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-pro',
     keyConfigured: !!key,
-    keyPreview: key ? key.substring(0, 8) + '...' : 'NOT SET — check Vercel env vars'
+    keyPreview: key ? key.substring(0, 8) + '...' : 'NOT SET'
   });
 });
 
