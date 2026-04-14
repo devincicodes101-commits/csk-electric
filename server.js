@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro:generateContent';
 
 app.use(cors());
 app.use(express.json());
@@ -93,7 +93,11 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
             { inline_data: { mime_type: mimeType, data: base64Data } },
             { text: EXTRACTION_PROMPT }
           ]
-        }]
+        }],
+        generationConfig: {
+          response_mime_type: 'application/json',
+          temperature: 0.1
+        }
       })
     });
 
@@ -159,9 +163,9 @@ app.get('/api/health', (req, res) => {
   const key = process.env.GEMINI_API_KEY;
   res.json({
     status: 'ok',
-    model: 'gemini-1.5-pro',
+    model: 'gemini-3.1-pro',
     keyConfigured: !!key,
-    keyPreview: key ? key.substring(0, 8) + '...' : 'NOT SET'
+    keyPreview: key ? key.substring(0, 8) + '...' : 'NOT SET — check Vercel env vars'
   });
 });
 
