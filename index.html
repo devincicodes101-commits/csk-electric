@@ -243,7 +243,7 @@ async function checkHealth() {
     try {
         const res = await fetch(API_BASE + '/api/health');
         if (res.ok) {
-            el.innerHTML = '<i class="fa-solid fa-circle" style="color:#059669;font-size:8px;margin-right:4px;"></i>AI Ready (GPT-4o)';
+            el.innerHTML = '<i class="fa-solid fa-circle" style="color:#059669;font-size:8px;margin-right:4px;"></i>AI Ready (Gemini)';
             el.style.color = '#059669';
         } else {
             throw new Error();
@@ -326,7 +326,7 @@ function uploadHTML() {
 
         <div style="margin-top:10px;display:flex;align-items:center;gap:8px;">
             <i class="fa-solid fa-robot" style="color:#9CA3AF;font-size:12px;"></i>
-            <span style="font-size:11.5px;color:#9CA3AF;">Powered by GPT-4o Vision — extracts vendor, amount, invoice number, line items, and job number (PO Box)</span>
+            <span style="font-size:11.5px;color:#9CA3AF;">Powered by Gemini Vision — extracts vendor, amount, invoice number, line items, and job number (PO Box)</span>
         </div>
 
         ${hasHistory ? `
@@ -357,13 +357,13 @@ function uploadingHTML() {
             <div class="spinner" style="margin:0 auto;"></div>
         </div>
         <div style="font-size:16px;font-weight:700;color:#1F2937;margin-bottom:6px;">Analyzing Receipt...</div>
-        <div style="font-size:13px;color:#6B7280;margin-bottom:24px;">GPT-4o is reading your receipt and extracting all details</div>
+        <div style="font-size:13px;color:#6B7280;margin-bottom:24px;">Gemini is reading your receipt and extracting all details</div>
         <div style="display:flex;flex-direction:column;gap:8px;text-align:left;background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:16px 20px;">
             <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#6B7280;">
                 <i class="fa-solid fa-check" style="color:#059669;width:16px;"></i> Uploading image
             </div>
             <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#1F2937;font-weight:500;">
-                <i class="fa-solid fa-spinner fa-spin" style="color:var(--brand);width:16px;"></i> Reading with GPT-4o Vision
+                <i class="fa-solid fa-spinner fa-spin" style="color:var(--brand);width:16px;"></i> Reading with Gemini Vision
             </div>
             <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;color:#9CA3AF;">
                 <i class="fa-regular fa-circle" style="width:16px;"></i> Extracting vendor &amp; amounts
@@ -401,7 +401,7 @@ function reviewHTML() {
                         ? `<div style="text-align:center;padding:40px 20px;">
                              <i class="fa-solid fa-file-pdf" style="font-size:52px;color:#DC2626;margin-bottom:14px;display:block;"></i>
                              <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:4px;">PDF Invoice</div>
-                             <div style="font-size:11.5px;color:#9CA3AF;">Text extracted and analyzed by GPT-4o</div>
+                             <div style="font-size:11.5px;color:#9CA3AF;">Text extracted and analyzed by Gemini</div>
                            </div>`
                         : `<img src="${r.imageDataUrl || ''}" alt="Receipt"
                                onerror="this.parentElement.innerHTML='<div style=\\'text-align:center;padding:40px;color:#9CA3AF;font-size:13px;\\'>Preview unavailable</div>'">`
@@ -426,7 +426,7 @@ function reviewHTML() {
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                     <div style="font-size:16px;font-weight:700;color:#111827;">Extracted Receipt Details</div>
                     <span style="font-size:11px;color:#9CA3AF;background:#F3F4F6;padding:3px 8px;border-radius:4px;">
-                        <i class="fa-solid fa-robot" style="margin-right:3px;color:var(--brand);"></i>GPT-4o Vision
+                        <i class="fa-solid fa-robot" style="margin-right:3px;color:var(--brand);"></i>Gemini Vision
                     </span>
                 </div>
 
@@ -626,7 +626,7 @@ function settingsHTML() {
                 <div style="font-size:13px;font-weight:700;color:#111827;margin-bottom:14px;">AI Extraction</div>
                 <div style="display:grid;grid-template-columns:140px 1fr;gap:8px 12px;align-items:center;font-size:13px;">
                     <span style="color:#6B7280;">Model</span>
-                    <span style="font-weight:600;color:#374151;">GPT-4o Vision</span>
+                    <span style="font-weight:600;color:#374151;">Gemini Vision</span>
                     <span style="color:#6B7280;">API Status</span>
                     <span id="settings-api-status" style="color:#6B7280;">Checking...</span>
                     <span style="color:#6B7280;">PO Detection</span>
@@ -688,7 +688,6 @@ function settingsHTML() {
 
 /* ── Event Binding ── */
 function bind() {
-    // Drop zone
     const dz = document.getElementById('drop-zone');
     if (dz) {
         dz.addEventListener('click', () => document.getElementById('file-input').click());
@@ -701,7 +700,6 @@ function bind() {
         });
     }
 
-    // File input
     const fi = document.getElementById('file-input');
     if (fi) {
         fi.addEventListener('change', e => {
@@ -710,19 +708,16 @@ function bind() {
         });
     }
 
-    // Review actions
     const bSave = document.getElementById('btn-save');
     if (bSave) bSave.addEventListener('click', saveReceipt);
     const bFlag = document.getElementById('btn-flag');
     if (bFlag) bFlag.addEventListener('click', flagError);
 
-    // History search/filter
     const hs = document.getElementById('history-search');
     if (hs) hs.addEventListener('input', filterHistory);
     const hf = document.getElementById('history-filter');
     if (hf) hf.addEventListener('change', filterHistory);
 
-    // Settings
     const sConfirm = document.getElementById('set-confirm');
     if (sConfirm) sConfirm.addEventListener('change', () => {
         state.settings.requireConfirm = sConfirm.checked;
@@ -734,7 +729,6 @@ function bind() {
         toast('Setting updated', 'success');
     });
 
-    // Job number live validation in review
     const fjob = document.getElementById('f-jobno');
     if (fjob) {
         fjob.addEventListener('input', () => {
@@ -750,18 +744,16 @@ function bind() {
         });
     }
 
-    // Settings API status
     const sapiEl = document.getElementById('settings-api-status');
     if (sapiEl) {
         fetch(API_BASE + '/api/health').then(r => r.ok ? r.json() : null).then(d => {
-            if (d) sapiEl.innerHTML = '<span style="color:#059669;font-weight:600;">Connected — GPT-4o</span>';
+            if (d) sapiEl.innerHTML = '<span style="color:#059669;font-weight:600;">Connected — Gemini</span>';
             else sapiEl.innerHTML = '<span style="color:#DC2626;">Offline</span>';
         }).catch(() => {
             sapiEl.innerHTML = '<span style="color:#DC2626;">Server offline — run: node server.js</span>';
         });
     }
 
-    // Inline error queue edit focus
     if (state.editingJobId) {
         const inp = document.getElementById('edit-job-input');
         if (inp) {
@@ -818,7 +810,6 @@ async function handleFile(file) {
         state.receipt = json.data;
         state.view = 'review';
 
-        // Update breadcrumb
         document.getElementById('breadcrumb').innerHTML =
             '<span style="color:#6B7280;cursor:pointer;text-decoration:underline;text-decoration-color:#D1D5DB;" onclick="navigate(\'upload\')">Upload Receipt</span>' +
             '<span style="margin:0 6px;color:#D1D5DB;">/</span>' +
@@ -842,7 +833,6 @@ function saveReceipt() {
     if (!state.receipt) return;
     const r = state.receipt;
 
-    // Read any edits from the form
     const vendor = document.getElementById('f-vendor')?.value || r.vendor;
     const invoice = document.getElementById('f-invoice')?.value || r.invoiceNo;
     const date = document.getElementById('f-date')?.value || r.date;
