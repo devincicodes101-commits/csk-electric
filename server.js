@@ -158,7 +158,31 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', model: 'gemini-2.0-flash' });
+  const key = process.env.GEMINI_API_KEY;
+  res.json({
+    status: 'ok',
+    model: 'gemini-2.0-flash',
+    keyConfigured: !!key,
+    keyPreview: key ? key.substring(0, 8) + '...' : 'NOT SET — check Vercel env vars'
+  });
+});
+
+// List available Gemini models for this API key
+app.get('/api/models', async (req, res) => {
+  try {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`
+    );
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json(data);
+    const models = (data.models || []).map(m => ({
+      name: m.name,
+      methods: m.supportedGenerationMethods
+    }));
+    res.json({ models });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {
