@@ -6,7 +6,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 app.use(cors());
 app.use(express.json());
@@ -83,7 +83,6 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
     const fileBuffer = req.file.buffer;
     const mimeType = req.file.mimetype;
 
-    // Call Gemini REST API directly — no SDK, no version issues
     const base64Data = fileBuffer.toString('base64');
     const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
       method: 'POST',
