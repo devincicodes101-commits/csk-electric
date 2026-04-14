@@ -2,12 +2,11 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const cors = require('cors');
-const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent';
 
 app.use(cors());
 app.use(express.json());
@@ -84,24 +83,29 @@ app.post('/api/extract', upload.single('receipt'), async (req, res) => {
     const fileBuffer = req.file.buffer;
     const mimeType = req.file.mimetype;
 
-    let rawContent;
-
-    // Gemini handles both images and PDFs the same way via inline data
+    // Call Gemini REST API directly — no SDK, no version issues
     const base64Data = fileBuffer.toString('base64');
-    const result = await genAI.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: [
-        {
+    const geminiRes = await fetch(`${GEMINI_API_URL}?key=${process.env.GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
           parts: [
-            { inlineData: { mimeType: mimeType, data: base64Data } },
+            { inline_data: { mime_type: mimeType, data: base64Data } },
             { text: EXTRACTION_PROMPT }
           ]
-        }
-      ]
+        }]
+      })
     });
-    rawContent = result.text.trim();
 
-    // Strip markdown code fences if present
+    const geminiJson = await geminiRes.json();
+
+    if (!geminiRes.ok) {
+      throw new Error('Gemini API error: ' + JSON.stringify(geminiJson.error || geminiJson));
+    }
+
+    const rawContent = geminiJson.candidates[0].content.parts[0].text.trim();
+
     let jsonStr = rawContent;
     if (jsonStr.startsWith('```')) {
       jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
